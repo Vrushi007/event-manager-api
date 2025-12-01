@@ -7,19 +7,41 @@ import hashlib
 from app.database import Base
 
 
+class College(Base):
+    __tablename__ = "colleges"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False, index=True)
+    code = Column(String(50), unique=True, nullable=False, index=True)
+    city = Column(String(100), nullable=True)
+    contact_email = Column(String(120), nullable=True)
+    contact_phone = Column(String(20), nullable=True)
+    website = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_active = Column(Boolean, default=True)
+
+    # Relationships
+    students = relationship("Student", back_populates="college", cascade="all, delete-orphan")
+
+
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(120), unique=True, nullable=False, index=True)
-    full_name = Column(String(120), nullable=True)
+    username = Column(String(120), unique=True, nullable=False, index=True)
+    email = Column(String(120), nullable=True, index=True)
+    first_name = Column(String(120), nullable=True)
+    last_name = Column(String(120), nullable=True)
     password_hash = Column(String(256), nullable=False)
     is_admin = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
     registrations = relationship("Registration", back_populates="user", cascade="all, delete-orphan")
     created_events = relationship("Event", back_populates="creator", cascade="all, delete-orphan")
+    student_profile = relationship("Student", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     def set_password(self, password: str):
         # Pre-hash with SHA256 to ensure we never exceed bcrypt's 72-byte limit
@@ -44,6 +66,24 @@ class User(Base):
         # Verify password against stored hash
         stored_hash = self.password_hash.encode("utf-8")
         return bcrypt.checkpw(password_bytes, stored_hash)
+
+
+class Student(Base):
+    __tablename__ = "students"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)
+    college_id = Column(Integer, ForeignKey("colleges.id"), nullable=False, index=True)
+    roll_number = Column(String(50), nullable=True)
+    branch = Column(String(100), nullable=True)
+    year_of_study = Column(Integer, nullable=True)
+    is_verified = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    user = relationship("User", back_populates="student_profile")
+    college = relationship("College", back_populates="students")
 
 
 class Event(Base):

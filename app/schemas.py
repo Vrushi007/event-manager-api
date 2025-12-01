@@ -8,8 +8,10 @@ from typing import Optional
 # ============================================
 
 class UserBase(BaseModel):
-    email: EmailStr
-    full_name: Optional[str] = None
+    username: str = Field(..., min_length=3, max_length=120)
+    email: Optional[EmailStr] = None
+    first_name: Optional[str] = Field(None, max_length=120)
+    last_name: Optional[str] = Field(None, max_length=120)
 
 
 class UserCreate(UserBase):
@@ -18,13 +20,14 @@ class UserCreate(UserBase):
 
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    username: str
     password: str
 
 
 class UserResponse(UserBase):
     id: int
     is_admin: bool
+    is_active: bool
     created_at: datetime
     
     model_config = ConfigDict(from_attributes=True)
@@ -32,7 +35,7 @@ class UserResponse(UserBase):
 
 class UserInToken(BaseModel):
     id: int
-    email: str
+    username: str
     is_admin: bool
 
 
@@ -49,6 +52,48 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     user_id: Optional[int] = None
     is_admin: bool = False
+
+
+# ============================================
+# STUDENT SCHEMAS
+# ============================================
+
+class StudentSignup(BaseModel):
+    username: str = Field(..., min_length=3, max_length=120)
+    email: Optional[EmailStr] = None
+    first_name: Optional[str] = Field(None, max_length=120)
+    last_name: Optional[str] = Field(None, max_length=120)
+    password: str = Field(..., min_length=6)
+    college_id: int
+    roll_number: Optional[str] = Field(None, max_length=50)
+    branch: Optional[str] = Field(None, max_length=100)
+    year_of_study: Optional[int] = Field(None, ge=1, le=4)
+
+
+# ============================================
+# COLLEGE SCHEMAS
+# ============================================
+
+class CollegeBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    code: str = Field(..., min_length=1, max_length=50)
+    city: Optional[str] = Field(None, max_length=100)
+    contact_email: Optional[EmailStr] = None
+    contact_phone: Optional[str] = Field(None, max_length=20)
+    website: Optional[str] = Field(None, max_length=255)
+    is_active: bool = True
+
+
+class CollegeCreate(CollegeBase):
+    pass
+
+
+class CollegeResponse(CollegeBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================

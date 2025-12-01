@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import auth, events, registrations
+from app.routers import auth, events, registrations, colleges, users
 
 # Create FastAPI app
 app = FastAPI(
@@ -26,8 +26,10 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
+app.include_router(users.router, prefix=settings.API_V1_PREFIX)
 app.include_router(events.router, prefix=settings.API_V1_PREFIX)
 app.include_router(registrations.router, prefix=settings.API_V1_PREFIX)
+app.include_router(colleges.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")

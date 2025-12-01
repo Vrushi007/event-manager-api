@@ -93,7 +93,7 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
 alembic upgrade head
 ```
 
-This will create all the necessary tables (users, events, registrations).
+This will create all the necessary tables (users, colleges, students, events, registrations).
 
 ### 6. Start the server
 
@@ -180,14 +180,40 @@ Now you can test all protected endpoints!
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+### Updating your database after pulling changes
+
+If you've pulled the latest changes from git and there are new database migrations:
+
+```bash
+# Activate virtual environment
+source .venv/bin/activate
+
+# Check current database version
+python -m alembic current
+
+# View available migrations
+python -m alembic heads
+
+# Apply all pending migrations
+python -m alembic upgrade head
+```
+
+The `upgrade head` command will:
+
+- Check which migrations have already been applied
+- Apply any new migrations in sequence
+- Update your database schema to match the latest models
+
 ### Creating new migrations
 
 After modifying models:
 
 ```bash
-alembic revision --autogenerate -m "Description of changes"
-alembic upgrade head
+python -m alembic revision --autogenerate -m "Description of changes"
+python -m alembic upgrade head
 ```
+
+**Important:** Always review auto-generated migrations before applying them. Alembic may not detect all changes correctly (like column renames or data migrations).
 
 ### Project Structure
 
@@ -203,6 +229,8 @@ event-manager-api/
 │   ├── dependencies.py      # Auth dependencies
 │   └── routers/             # API route modules
 │       ├── auth.py          # Authentication endpoints
+│       ├── users.py         # User management endpoints
+│       ├── colleges.py      # College endpoints
 │       ├── events.py        # Event endpoints
 │       └── registrations.py # Registration endpoints
 ├── alembic/                 # Database migrations

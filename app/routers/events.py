@@ -4,7 +4,7 @@ from typing import List
 
 from app.database import get_db
 from app.models import User, Event
-from app.schemas import EventCreate, EventResponse, MessageResponse
+from app.schemas import EventCreate, EventResponse, MessageResponse, EventUpdate
 from app.dependencies import get_current_user, get_current_admin_user
 
 router = APIRouter(prefix="/events", tags=["Events"])
@@ -104,4 +104,53 @@ def delete_event(
     return MessageResponse(
         message="Event deleted successfully",
         detail=f"Event ID: {event_id}"
+    )
+
+
+@router.put("/{event_id}", response_model=MessageResponse)
+def update_event(
+    event_id: int,
+    event_data: EventUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
+):
+    """
+    Update an existing event (admin only)
+    """
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event not found"
+        )
+
+    # Determine effective start/end times for validation
+    new_start = event_data.start_time if event_data.start_time is not None else event.start_time
+    new_end = event_data.end_time if event_data.end_time is not None else event.end_time
+    if new_end is not None and new_start is not None and new_end <= new_start:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="End time must be after start time"
+        )
+
+    # Update fields when provided
+    if event_data.title is not None:
+        event.title = event_data.title
+    if event_data.description is not None:
+        event.description = event_data.description
+    if event_data.venue is not None:
+        event.venue = event_data.venue
+    if event_data.start_time is not None:
+        event.start_time = event_data.start_time
+    if event_data.end_time is not None:
+        event.end_time = event_data.end_time
+    if event_data.capacity is not None:
+        event.capacity = event_data.capacity
+
+    db.commit()
+    db.refresh(event)
+
+    return MessageResponse(
+        message="Event updated successfully",
+        detail=f"Event ID: {event.id}"
     )
